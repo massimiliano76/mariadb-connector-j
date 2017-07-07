@@ -2,10 +2,11 @@ sudo: required
 dist: trusty
 language: java
 services: docker
-group: edge
+
 before_install:
     - chmod +x .travis/script.sh
     - echo "MAVEN_OPTS='-Xmx384m'" > ~/.mavenrc
+    - sudo apt-get update
 install:
     # generate SSL certificates
     - mkdir tmp
