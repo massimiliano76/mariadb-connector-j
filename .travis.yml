@@ -27,10 +27,10 @@ env:
 #    - DB=mysql:5.6 PACKET=8M
 #    - DB=mysql:5.7 PACKET=8M
 #    - DB=mysql:8.0 PACKET=8M
-    - DB=mariadb:5.5 PACKET=8M
+#    - DB=mariadb:5.5 PACKET=8M
 #    - DB=mariadb:10.0 PACKET=8M
 #    - DB=mariadb:10.1 PACKET=8M
-#    - DB=mariadb:10.2 PACKET=8M
+    - DB=mariadb:10.2 PACKET=8M
 #    - DB=mariadb:10.2 PACKET=8M PROFILE=true
 #    - DB=mariadb:10.2 PACKET=8M TYPE=PREPARE
 #    - DB=mariadb:10.2 PACKET=8M TYPE=REWRITE
