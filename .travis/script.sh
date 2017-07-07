@@ -73,9 +73,14 @@ else
     ###################################################################################################################
     if [ -n "$TRAVIS" ]
     then
+        #local server
+        mysqlServ2=( mysql --protocol=tcp -uroot -h127.0.0.1 --port=3306 )
+        echo 'SELECT 1' | "${mysqlServ2[@]}"
+
         #check server :
         mysqlServ=( mysql --protocol=tcp -ubob -h127.0.0.1 --port=3305 )
         echo 'SELECT 1' | "${mysqlServ[@]}"
+
 
         #check maxscale
         mysql=( mysql --protocol=tcp -ubob -h127.0.0.1 --port=4007 )
