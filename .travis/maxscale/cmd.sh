@@ -6,6 +6,10 @@ sleep 15
 #################################################################################################
 # wait for db availability for 30s
 #################################################################################################
+#check server :
+mysqlServ=( mysql --protocol=tcp -ubob -hdb_1 --port=3306 )
+echo 'SELECT 1' | "${mysqlServ[@]}"
+
 mysql=( mysql --protocol=tcp -ubob -hdb --port=3306 )
 for i in {30..0}; do
     if echo 'SELECT 1' | "${mysql[@]}" &> /dev/null; then

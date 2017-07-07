@@ -73,6 +73,11 @@ else
     ###################################################################################################################
     if [ -n "$TRAVIS" ]
     then
+        #check server :
+        mysqlServ=( mysql --protocol=tcp -ubob -h127.0.0.1 --port=3305 )
+        echo 'SELECT 1' | "${mysqlServ[@]}"
+
+        #check maxscale
         mysql=( mysql --protocol=tcp -ubob -h127.0.0.1 --port=4007 )
 
         for i in {30..0}; do
