@@ -8,8 +8,9 @@ before_install:
 install:
     # generate SSL certificates
     - mkdir tmp
-    - chmod 777 tmp
     - .travis/gen-ssl.sh mariadb.example.com tmp
+    - ls -lrt tmp
+    - chmod 777 tmp
     - chmod 777 tmp/*
 cache:
   directories:
