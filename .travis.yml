@@ -1,7 +1,7 @@
+sudo: required
 dist: trusty
 language: java
 services: docker
-sudo: false
 group: edge
 before_install:
     - chmod +x .travis/script.sh
