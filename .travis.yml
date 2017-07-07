@@ -1,4 +1,4 @@
-dist: trusty
+#dist: trusty
 language: java
 services: docker
 sudo: false
@@ -12,9 +12,9 @@ install:
     - chmod 777 tmp
     - chmod 777 tmp/*
     - ls -lrt tmp
-cache:
-  directories:
-    - $HOME/.m2
+#cache:
+#  directories:
+#    - $HOME/.m2
 
 jdk:
 #    - oraclejdk9
