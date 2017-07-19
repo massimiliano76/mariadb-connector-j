@@ -86,7 +86,6 @@ public class MariaDbDatabaseMetaData implements DatabaseMetaData {
         this.connection = (MariaDbConnection) connection;
         this.username = user;
         this.url = url;
-        this.connection.getProtocol().getServerVersion();
     }
 
     static String columnTypeClause(int dataTypeMappingFlags) {
@@ -446,7 +445,8 @@ public class MariaDbDatabaseMetaData implements DatabaseMetaData {
     }
 
     private ResultSet executeQuery(String sql) throws SQLException {
-        SelectResultSet rs = (SelectResultSet) connection.createStatement().executeQuery(sql);
+        Statement stmt = new MariaDbStatement(connection, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY);
+        SelectResultSet rs = (SelectResultSet) stmt.executeQuery(sql);
         rs.setStatement(null); // bypass Hibernate statement tracking (CONJ-49)
         rs.setReturnTableAlias(true);
         return rs;
@@ -456,7 +456,7 @@ public class MariaDbDatabaseMetaData implements DatabaseMetaData {
         if (value == null) {
             return "NULL";
         }
-        return "'" + Utils.escapeString(value, connection.noBackslashEscapes) + "'";
+        return "'" + Utils.escapeString(value, connection.getProtocol().noBackslashEscapes()) + "'";
     }
 
     /**
