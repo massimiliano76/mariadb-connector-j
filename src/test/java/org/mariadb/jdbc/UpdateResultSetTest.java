@@ -70,16 +70,21 @@ public class UpdateResultSetTest extends BaseTest {
      */
     @Test
     public void testNoPrimaryKey() throws Exception {
+        createTable("testnoprimarykey", "`id` INT NOT NULL,"
+                + "`t1` VARCHAR(50) NOT NULL");
+        Statement stmt = sharedConnection.createStatement();
+        stmt.execute("INSERT INTO testNoPrimaryKey VALUES (1, 't1'), (2, 't2')");
+
         try (PreparedStatement preparedStatement = sharedConnection.prepareStatement(
-                "SELECT * FROM information_schema.SESSION_VARIABLES", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE)) {
-            ResultSet rs = preparedStatement.executeQuery("SELECT * FROM information_schema.SESSION_VARIABLES");
+                "SELECT * FROM testnoprimarykey", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE)) {
+            ResultSet rs = preparedStatement.executeQuery("SELECT * FROM testnoprimarykey");
             rs.next();
             try {
                 rs.updateString(1, "1");
                 fail();
             } catch (SQLException sqle) {
-                assertTrue(sqle.getMessage(), sqle.getMessage().contains("ResultSet cannot be updated/deleted. Table "
-                        + "`information_schema`.`SESSION_VARIABLES` has no primary key"));
+                assertEquals("ResultSet cannot be updated/deleted. Table "
+                        + "`" + sharedConnection.getCatalog() + "`.`testnoprimarykey` has no primary key", sqle.getMessage());
             }
         }
     }
@@ -146,12 +151,12 @@ public class UpdateResultSetTest extends BaseTest {
         createTable("testUpdateWithPrimary", "`id` INT NOT NULL AUTO_INCREMENT,"
                 + "`t1` VARCHAR(50) NOT NULL,"
                 + "`t2` VARCHAR(50) NULL default 'default-value',"
-                + "PRIMARY KEY (`id`)");
+                + "PRIMARY KEY (`id`)", "DEFAULT CHARSET=utf8");
 
         Statement stmt = sharedConnection.createStatement();
         stmt.executeQuery("INSERT INTO testUpdateWithPrimary(t1,t2) values ('1-1','1-2'),('2-1','2-2')");
 
-        String utf8escapeQuote = "\u4f60\u597d '\' \" \\";
+        String utf8escapeQuote = "你好 '\' \" \\";
 
         try (PreparedStatement preparedStatement = sharedConnection.prepareStatement("SELECT id, t1, t2 FROM testUpdateWithPrimary",
                 ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE)) {
