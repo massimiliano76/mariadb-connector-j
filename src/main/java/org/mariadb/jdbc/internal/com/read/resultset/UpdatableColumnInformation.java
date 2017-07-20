@@ -68,7 +68,8 @@ public class UpdatableColumnInformation extends ColumnInformation {
      * @param generated         is automatically generated
      * @param primary           is column part of primary key
      */
-    public UpdatableColumnInformation(ColumnInformation columnInformation, boolean canBeNull, boolean hasDefault, boolean generated, boolean primary) {
+    public UpdatableColumnInformation(ColumnInformation columnInformation, boolean canBeNull, boolean hasDefault,
+                                      boolean generated, boolean primary) {
         super(columnInformation);
         this.canBeNull = canBeNull;
         this.hasDefault = hasDefault;

@@ -101,7 +101,19 @@ public abstract class BasePrepareStatement extends MariaDbStatement implements P
     protected boolean hasLongData = false;
     private boolean noBackslashEscapes;
 
-
+    /**
+     * Constructor.
+     * Base class that permit setting parameters for client and server PrepareStatement.
+     *
+     * @param connection           current connection
+     * @param resultSetScrollType  one of the following <code>ResultSet</code> constants:
+     *                             <code>ResultSet.TYPE_FORWARD_ONLY</code>,
+     *                             <code>ResultSet.TYPE_SCROLL_INSENSITIVE</code>, or
+     *                             <code>ResultSet.TYPE_SCROLL_SENSITIVE</code>
+     * @param resultSetConcurrency one of the following <code>ResultSet</code> constants:
+     *                             <code>ResultSet.CONCUR_READ_ONLY</code> or
+     *                             <code>ResultSet.CONCUR_UPDATABLE</code>
+     */
     public BasePrepareStatement(MariaDbConnection connection, int resultSetScrollType, int resultSetConcurrency) {
         super(connection, resultSetScrollType, resultSetConcurrency);
         this.noBackslashEscapes = protocol.noBackslashEscapes();

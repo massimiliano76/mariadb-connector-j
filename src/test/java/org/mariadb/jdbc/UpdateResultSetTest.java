@@ -70,8 +70,9 @@ public class UpdateResultSetTest extends BaseTest {
      */
     @Test
     public void testNoPrimaryKey() throws Exception {
-        try (PreparedStatement preparedStatement = sharedConnection.prepareStatement("SHOW VARIABLES", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE)) {
-            ResultSet rs = preparedStatement.executeQuery("SHOW VARIABLES");
+        try (PreparedStatement preparedStatement = sharedConnection.prepareStatement(
+                "SELECT * FROM information_schema.SESSION_VARIABLES", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE)) {
+            ResultSet rs = preparedStatement.executeQuery("SELECT * FROM information_schema.SESSION_VARIABLES");
             rs.next();
             try {
                 rs.updateString(1, "1");
@@ -85,7 +86,8 @@ public class UpdateResultSetTest extends BaseTest {
 
     @Test
     public void testNoDatabase() throws Exception {
-        try (PreparedStatement preparedStatement = sharedConnection.prepareStatement("SELECT 1", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE)) {
+        try (PreparedStatement preparedStatement = sharedConnection.prepareStatement(
+                "SELECT 1", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE)) {
             ResultSet rs = preparedStatement.executeQuery();
             rs.next();
             try {

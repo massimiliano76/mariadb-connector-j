@@ -83,8 +83,11 @@ public class UpdatableResultSet extends SelectResultSet {
     public boolean rowDeleted = false;
     private String database;
     private String table;
+
     private boolean canBeUpdate;
     private boolean canBeInserted;
+    private boolean canBeRefresh;
+
     private String exceptionUpdateMsg;
     private String exceptionInsertMsg;
     private int state = STATE_STANDARD;
@@ -119,6 +122,7 @@ public class UpdatableResultSet extends SelectResultSet {
         table = null;
         canBeUpdate = true;
         canBeInserted = true;
+        canBeRefresh = false;
 
         //check that resultSet concern only one table (and database)
         for (ColumnInformation columnInformation : columnsInformation) {
@@ -210,6 +214,8 @@ public class UpdatableResultSet extends SelectResultSet {
                     //rows cannot be updated.
                     cannotUpdateInsertRow("Table `" + database + "`.`" + table
                             + "` has no primary key");
+                } else {
+                    canBeRefresh = true;
                 }
 
                 if (position != columnInformationLength) {
@@ -1295,64 +1301,65 @@ public class UpdatableResultSet extends SelectResultSet {
      * {inheritDoc}.
      */
     public void refreshRow() throws SQLException {
+        if (canBeRefresh) {
+            if (refreshPreparedStatement == null) {
+                //Construct SELECT query according to column metadata, with WHERE part containing primary fields
+                StringBuilder selectSql = new StringBuilder("SELECT ");
+                StringBuilder whereClause = new StringBuilder(" WHERE ");
 
-        if (refreshPreparedStatement == null) {
-            //Construct SELECT query according to column metadata, with WHERE part containing primary fields
-            StringBuilder selectSql = new StringBuilder("SELECT ");
-            StringBuilder whereClause = new StringBuilder(" WHERE ");
+                boolean firstPrimary = true;
+                for (int pos = 0; pos < columnInformationLength; pos++) {
+                    UpdatableColumnInformation colInfo = getUpdatableColumns()[pos];
+                    if (pos != 0) selectSql.append(",");
+                    selectSql.append("`")
+                            .append(colInfo.getOriginalName())
+                            .append("`");
 
-            boolean firstPrimary = true;
+                    if (colInfo.isPrimary()) {
+                        if (!firstPrimary) whereClause.append("AND ");
+                        firstPrimary = false;
+                        whereClause.append("`")
+                                .append(colInfo.getOriginalName())
+                                .append("` = ? ");
+                    }
+                }
+                selectSql.append(" FROM `" + database + "`.`" + table + "`").append(whereClause);
+
+                //row's raw bytes must be encoded according to current resultSet type
+                //Create Server or Client PrepareStatement accordingly
+                if (isBinaryEncoded) {
+                    refreshPreparedStatement = connection.serverPrepareStatement(selectSql.toString());
+                } else {
+                    refreshPreparedStatement = connection.clientPrepareStatement(selectSql.toString());
+                }
+            }
+
+            int fieldsPrimaryIndex = 1;
             for (int pos = 0; pos < columnInformationLength; pos++) {
                 UpdatableColumnInformation colInfo = getUpdatableColumns()[pos];
-                if (pos != 0) selectSql.append(",");
-                selectSql.append("`")
-                        .append(colInfo.getOriginalName())
-                        .append("`");
-
                 if (colInfo.isPrimary()) {
-                    if (!firstPrimary) whereClause.append("AND ");
-                    firstPrimary = false;
-                    whereClause.append("`")
-                            .append(colInfo.getOriginalName())
-                            .append("` = ? ");
-                }
-            }
-            selectSql.append(" FROM `" + database + "`.`" + table + "`").append(whereClause);
+                    ParameterHolder value = parameterHolders[pos];
 
-            //row's raw bytes must be encoded according to current resultSet type
-            //Create Server or Client PrepareStatement accordingly
-            if (isBinaryEncoded) {
-                refreshPreparedStatement = connection.serverPrepareStatement(selectSql.toString());
-            } else {
-                refreshPreparedStatement = connection.clientPrepareStatement(selectSql.toString());
-            }
-        }
-
-        int fieldsPrimaryIndex = 1;
-        for (int pos = 0; pos < columnInformationLength; pos++) {
-            UpdatableColumnInformation colInfo = getUpdatableColumns()[pos];
-            if (colInfo.isPrimary()) {
-                ParameterHolder value = parameterHolders[pos];
-
-                if (state == STATE_UPDATED && value != null) {
-                    //Row has just been updated using updateRow() methods.
-                    //updateRow has changed primary key, must use the new value.
-                    if (isBinaryEncoded) {
-                        ((MariaDbPreparedStatementServer) refreshPreparedStatement).setParameter(fieldsPrimaryIndex++, value);
+                    if (state == STATE_UPDATED && value != null) {
+                        //Row has just been updated using updateRow() methods.
+                        //updateRow has changed primary key, must use the new value.
+                        if (isBinaryEncoded) {
+                            ((MariaDbPreparedStatementServer) refreshPreparedStatement).setParameter(fieldsPrimaryIndex++, value);
+                        } else {
+                            ((MariaDbPreparedStatementClient) refreshPreparedStatement).setParameter(fieldsPrimaryIndex++, value);
+                        }
                     } else {
-                        ((MariaDbPreparedStatementClient) refreshPreparedStatement).setParameter(fieldsPrimaryIndex++, value);
+                        refreshPreparedStatement.setObject(fieldsPrimaryIndex++, getObject(pos + 1), colInfo.getColumnType().getSqlType());
                     }
-                } else {
-                    refreshPreparedStatement.setObject(fieldsPrimaryIndex++, getObject(pos + 1), colInfo.getColumnType().getSqlType());
+
                 }
-
             }
+
+            SelectResultSet rs = (SelectResultSet) refreshPreparedStatement.executeQuery();
+
+            //update row data only if not deleted externally
+            if (rs.next()) updateRowData(rs.getCurrentRowData());
         }
-
-        SelectResultSet rs = (SelectResultSet) refreshPreparedStatement.executeQuery();
-
-        //update row data only if not deleted externally
-        if (rs.next()) updateRowData(rs.getCurrentRowData());
     }
 
     /**
