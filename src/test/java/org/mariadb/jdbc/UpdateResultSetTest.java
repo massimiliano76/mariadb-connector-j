@@ -73,7 +73,7 @@ public class UpdateResultSetTest extends BaseTest {
         createTable("testnoprimarykey", "`id` INT NOT NULL,"
                 + "`t1` VARCHAR(50) NOT NULL");
         Statement stmt = sharedConnection.createStatement();
-        stmt.execute("INSERT INTO testNoPrimaryKey VALUES (1, 't1'), (2, 't2')");
+        stmt.execute("INSERT INTO testnoprimarykey VALUES (1, 't1'), (2, 't2')");
 
         try (PreparedStatement preparedStatement = sharedConnection.prepareStatement(
                 "SELECT * FROM testnoprimarykey", ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_UPDATABLE)) {
